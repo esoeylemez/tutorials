@@ -8,6 +8,8 @@
 
 module Monoid where
 
+import Data.Semigroup
+
 
 -- | Associative binary functions.  Values of this type should satisfy
 -- the following law:
@@ -85,3 +87,20 @@ exercise3b = ASemigroup (\f g x -> f x + g x)
 
 exercise3c :: ASemigroup (a -> IO a)
 exercise3c = ASemigroup (\f g x -> f x >>= g)
+
+myStimes :: (Semigroup a) => Integer -> a -> a
+myStimes n x =
+    case compare n 1 of
+      LT -> error "myStimes: Non-positive count"
+      EQ -> x
+      GT -> x <> myStimes (n - 1) x
+
+newtype MySum a = MySum { getMySum :: a }
+
+instance (Num a) => Semigroup (MySum a) where
+    MySum x <> MySum y = MySum (x + y)
+
+newtype MyProduct a = MyProduct { getMyProduct :: a }
+
+instance (Num a) => Semigroup (MyProduct a) where
+    MyProduct x <> MyProduct y = MyProduct (x * y)

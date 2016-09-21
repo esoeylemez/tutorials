@@ -201,3 +201,88 @@ exercise3b :: ASemigroup (a -> Integer)
 
 exercise3c :: ASemigroup (a -> IO a)
 ```
+
+
+### The Semigroup class
+
+We have talked about the weakness of the associativity law, of which one
+consequence is that there are loads and loads of semigroups.  I don't
+just mean that in the obvious mathematical sense (there are infinitely
+many of them), but that you actually find them all over your code, if
+you train your senses to see them.  This also means that as you start
+abstracting over semigroups it may get tedious to pass them around as
+arguments all the time.  Luckily Haskell has a rather convenient feature
+to pass stuff to functions implicitly: type classes.  A class for
+semigroups looks like this:
+
+```haskell
+-- | Instances of this class should satisfy the following law:
+--
+--   * Associativity: for all x, y, z,
+--     @(x `sappend` y) `sappend` z = x `sappend` (y `sappend` z)@.
+
+class Semigroup a where
+    (<>) :: a -> a -> a
+```
+
+However, we can save ourselves the trouble of defining this class.
+Since base 4.9 (GHC 8.0 and later) it comes as part of the base library.
+If your base library is older, well, you should update.  If for some
+reason you can't, you can install the [semigroups library] for now.
+
+[semigroups library]: https://hackage.haskell.org/package/semigroups
+
+With this class we can dispense with the (admittedly rather ugly)
+`ASemigroup` arguments and record wildcards when abstracting over
+semigroups:
+
+```haskell
+myStimes :: (Semigroup a) => Integer -> a -> a
+myStimes n x =
+    case compare n 1 of
+      LT -> error "myStimes: Non-positive count"
+      EQ -> x
+      GT -> x <> myStimes (n - 1) x
+```
+
+The reason for the name is, as you may have guessed already, that this
+function is actually predefined as `stimes`, except with an optimisation
+that relies heavily on the associativity contract, and that for many
+semigroups provides an exponential speedup (the square-and-multiply
+algorithm).
+
+There is a downside to the class-based approach though: semigroups are
+now type-bound: you can only write one semigroup instance for `Integer`.
+To overcome this limitation we use `newtype` as usual, and the following
+types and instances are actually predefined:
+
+```haskell
+newtype Sum a = Sum { getSum :: a }
+
+instance (Num a) => Semigroup (Sum a) where
+    Sum x <> Sum y = Sum (x + y)
+
+newtype Product a = Product { getProduct :: a }
+
+instance (Num a) => Semigroup (Product a) where
+    Product x <> Product y = Product (x * y)
+```
+
+When we use `myStimes` we can select the instance based on which wrapper
+type we use:
+
+```haskell
+myStimes 5 (Sum 3)     = Sum (3 + 3 + 3 + 3 + 3)
+myStimes 5 (Product 3) = Product (3 * 3 * 3 * 3 * 3)
+```
+
+Even though there are almost always multiple semigroups for any given
+type, for some types it's convenient to just declare one of them as
+canonical and implement an instance for it.  For example for lists we
+use the concatenation semigroup, and we would rarely choose another one,
+so we implement:
+
+```haskell
+instance Semigroup [a] where
+    (<>) = (++)
+```
