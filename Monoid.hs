@@ -45,12 +45,12 @@ sAppendExample =
     let ASemigroup{..} = sAppend
     in foldr sappend [] ["A", "List", "Of", "Words"]
 
-stimes :: ASemigroup a -> Integer -> a -> a
-stimes sg@ASemigroup{..} n x =
+stimes' :: ASemigroup a -> Integer -> a -> a
+stimes' sg@ASemigroup{..} n x =
     case compare n 1 of
       LT -> error "stimes: Non-positive count."
       EQ -> x
-      GT -> x `sappend` stimes sg (n - 1) x
+      GT -> x `sappend` stimes' sg (n - 1) x
 
 exercise1 :: ASemigroup ()
 exercise1 = ASemigroup (\_ _ -> ())
