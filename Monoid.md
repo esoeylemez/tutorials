@@ -38,20 +38,20 @@ examples:
 
 ```haskell
 -- Compose two integers by addition.
-add :: ASemigroup Integer
-add = ASemigroup (+)
+sAdd :: ASemigroup Integer
+sAdd = ASemigroup (+)
 
 -- Compose two integers by multiplication.
-mult :: ASemigroup Integer
-mult = ASemigroup (*)
+sMult :: ASemigroup Integer
+sMult = ASemigroup (*)
 
 -- Compose two lists by concatenation.
-append :: ASemigroup [a]
-append = ASemigroup (++)
+sAppend :: ASemigroup [a]
+sAppend = ASemigroup (++)
 
 -- Compose two actions by IO composition.
-andThen :: ASemigroup (IO a)
-andThen = ASemigroup (>>)
+sAndThen :: ASemigroup (IO a)
+sAndThen = ASemigroup (>>)
 ```
 
 In case you're wondering why I'm not talking about type classes right
@@ -65,8 +65,8 @@ this type that doesn't satisfy it, we are breaking the contract.  Here
 is an example of such a violation:
 
 ```haskell
-badSemigroup :: ASemigroup Integer
-badSemigroup = ASemigroup (-)
+sBad :: ASemigroup Integer
+sBad = ASemigroup (-)
 
 -- Violation because: (3 - 2) - 1 ≠ 3 - (2 - 1)
 ```
@@ -77,14 +77,14 @@ directly, for which the `-XRecordWildCards` extension is useful,
 ```haskell
 {-# LANGUAGE RecordWildCards #-}
 
-addExample :: Integer
-addExample =
-    let ASemigroup{..} = add
+sAddExample :: Integer
+sAddExample =
+    let ASemigroup{..} = sAdd
     in 3 `sappend` 4 `sappend` 5 `sappend` 6
 
-appendExample :: String
-appendExample =
-    let ASemigroup{..} = append
+sAppendExample :: String
+sAppendExample =
+    let ASemigroup{..} = sAppend
     in foldr sappend [] ["A", "List", "Of", "Words"]
 ```
 
@@ -92,12 +92,12 @@ but more interestingly we can now abstract over semigroups (take
 semigroups as arguments):
 
 ```haskell
-stimes :: ASemigroup a -> Integer -> a -> a
-stimes sg@ASemigroup{..} n x =
+stimes' :: ASemigroup a -> Integer -> a -> a
+stimes' sg@ASemigroup{..} n x =
     case compare n 1 of
       LT -> error "stimes: Non-positive count."
       EQ -> x
-      GT -> x `sappend` stimes sg (n - 1) x
+      GT -> x `sappend` stimes' sg (n - 1) x
 ```
 
 This function, given a semigroup, a count `n` and a value `x` composes
@@ -105,15 +105,15 @@ This function, given a semigroup, a count `n` and a value `x` composes
 Examples:
 
 ```haskell
-stimes add 4 10
+stimes' add 4 10
   = 10 + (10 + (10 + 10))
   = 40
 
-stimes append 4 "Hello"
+stimes' append 4 "Hello"
   = "Hello" ++ ("Hello" ++ ("Hello" ++ "Hello"))
   = "HelloHelloHelloHello"
 
-stimes andThen 4 (putStrLn "blah")
+stimes' andThen 4 (putStrLn "blah")
   = putStrLn "blah" >> (putStrLn "blah" >>
     (putStrLn "blah" >> putStrLn "blah"))
 ```
