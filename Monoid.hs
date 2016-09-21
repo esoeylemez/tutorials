@@ -48,7 +48,7 @@ sAppendExample =
 stimes' :: ASemigroup a -> Integer -> a -> a
 stimes' sg@ASemigroup{..} n x =
     case compare n 1 of
-      LT -> error "stimes: Non-positive count."
+      LT -> error "stimes': non-positive count"
       EQ -> x
       GT -> x `sappend` stimes' sg (n - 1) x
 
