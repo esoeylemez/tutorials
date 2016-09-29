@@ -19,7 +19,7 @@ Semigroups
 Let's build up to monoids first; don't worry, it's a relatively short
 build-up.  A semigroup is an associative binary function:
 
-```haskell
+``` haskell
 -- | Associative binary functions.  Values of this type should satisfy
 -- the following law:
 --
@@ -36,7 +36,7 @@ That's it.  Such a function is commonly referred to as a *composition*
 function.  Given two arguments it *composes* them.  Here are a few
 examples:
 
-```haskell
+``` haskell
 -- Compose two integers by addition.
 sAdd :: ASemigroup Integer
 sAdd = ASemigroup (+)
@@ -64,7 +64,7 @@ particular contract: the associativity law.  If we construct a value of
 this type that doesn't satisfy it, we are breaking the contract.  Here
 is an example of such a violation:
 
-```haskell
+``` haskell
 sBad :: ASemigroup Integer
 sBad = ASemigroup (-)
 
@@ -74,7 +74,7 @@ sBad = ASemigroup (-)
 Back to valid semigroups.  We can of course use any of these semigroups
 directly, for which the `-XRecordWildCards` extension is useful,
 
-```haskell
+``` haskell
 {-# LANGUAGE RecordWildCards #-}
 
 sAddExample :: Integer
@@ -91,7 +91,7 @@ sAppendExample =
 but more interestingly we can now abstract over semigroups (take
 semigroups as arguments):
 
-```haskell
+``` haskell
 stimes' :: ASemigroup a -> Integer -> a -> a
 stimes' sg@ASemigroup{..} n x =
     case compare n 1 of
@@ -104,7 +104,7 @@ This function, given a semigroup, a count `n` and a value `x` composes
 `x` with itself the given number of times using the semigroup.
 Examples:
 
-```haskell
+``` haskell
 stimes' add 4 10
   = 10 + (10 + (10 + 10))
   = 40
@@ -126,14 +126,14 @@ the functions that do tend to be accumulating ("additive") in nature.
 Another consequence of associativity is that we can regroup composition
 as we wish, so given an expression like,
 
-```haskell
+``` haskell
 x1 `sappend` (x2 `sappend` (x3 `sappend` x4))
 ```
 
 we can evaluate the following expression instead and get the same
 result:
 
-```haskell
+``` haskell
 (x1 `sappend` x2) `sappend` (x3 `sappend` x4)
 ```
 
@@ -142,7 +142,7 @@ opportunities to optimise our code, which we will discover later.  For
 now let me just give you a particular example.  Integer multiplication
 is a semigroup:
 
-```haskell
+``` haskell
 ((((((5 * 5) * 5) * 5) * 5) * 5) * 5) * 5
 ```
 
@@ -150,7 +150,7 @@ If you were to evaluate this the way it is presented, you would do seven
 multiplications.  But since we're allowed to regroup as we wish, we can
 compute the following instead,
 
-```haskell
+``` haskell
   ((5 * 5) * (5 * 5)) * ((5 * 5) * (5 * 5))
 = (25 * 25) * (25 * 25)
 = 625 * 625
@@ -161,13 +161,13 @@ which only cost three multiplications.
 
 **Exercise 1**:  Construct a semigroup for the type `()`:
 
-```haskell
+``` haskell
 exercise1 :: ASemigroup ()
 ```
 
 **Exercise 2**:  Which of the following are valid semigroups?
 
-```haskell
+``` haskell
 exercise2a :: ASemigroup (IO a)
 exercise2a = ASemigroup (\c1 c2 -> c2 >> c1)
 
@@ -194,7 +194,7 @@ exercise2f = ASemigroup f
 **Exercise 3 (hard)**:  Construct interesting semigroups for the
 following types:
 
-```haskell
+``` haskell
 exercise3a :: ASemigroup (a -> a)
 
 exercise3b :: ASemigroup (a -> Integer)
@@ -215,7 +215,7 @@ arguments all the time.  Luckily Haskell has a rather convenient feature
 to pass stuff to functions implicitly: type classes.  A class for
 semigroups looks like this:
 
-```haskell
+``` haskell
 -- | Instances of this class should satisfy the following law:
 --
 --   * Associativity: for all x, y, z,
@@ -236,7 +236,7 @@ With this class we can dispense with the (admittedly rather ugly)
 `ASemigroup` arguments and record wildcards when abstracting over
 semigroups:
 
-```haskell
+``` haskell
 myStimes :: (Semigroup a) => Integer -> a -> a
 myStimes n x =
     case compare n 1 of
@@ -256,7 +256,7 @@ now type-bound: you can only write one semigroup instance for `Integer`.
 To overcome this limitation we use `newtype` as usual, and the following
 types and instances are actually predefined:
 
-```haskell
+``` haskell
 newtype Sum a = Sum { getSum :: a }
 
 instance (Num a) => Semigroup (Sum a) where
@@ -271,7 +271,7 @@ instance (Num a) => Semigroup (Product a) where
 When we use `myStimes` we can select the instance based on which wrapper
 type we use:
 
-```haskell
+``` haskell
 myStimes 5 (Sum 3)     = Sum (3 + 3 + 3 + 3 + 3)
 myStimes 5 (Product 3) = Product (3 * 3 * 3 * 3 * 3)
 ```
@@ -282,7 +282,7 @@ canonical and implement an instance for it.  For example for lists we
 use the concatenation semigroup, and we would rarely choose another one,
 so we implement:
 
-```haskell
+``` haskell
 instance Semigroup [a] where
     (<>) = (++)
 ```
