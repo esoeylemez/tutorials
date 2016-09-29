@@ -8,6 +8,7 @@
 
 module Monoid where
 
+import Data.Foldable
 import Data.Semigroup
 
 
@@ -104,3 +105,6 @@ newtype MyProduct a = MyProduct { getMyProduct :: a }
 
 instance (Num a) => Semigroup (MyProduct a) where
     MyProduct x <> MyProduct y = MyProduct (x * y)
+
+listLen :: [a] -> Integer
+listLen = foldl' (\c _ -> 1 + c) 0

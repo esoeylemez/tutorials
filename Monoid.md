@@ -287,3 +287,69 @@ so we implement:
 instance Semigroup [a] where
     (<>) = (++)
 ```
+
+
+### Semigroup morphisms
+
+Remember that a semigroup is an associative binary function.  We will
+now make sense of functions that "go from one semigroup to another".  To
+do that we will briefly return to the `ASemigroup` type and the
+following two semigroups:
+
+``` haskell
+-- Compose two integers by addition.
+sAdd :: ASemigroup Integer
+sAdd = ASemigroup (+)
+
+-- Compose two lists by concatenation.
+sAppend :: ASemigroup [a]
+sAppend = ASemigroup (++)
+```
+
+Now let's take a look at the following function:
+
+``` haskell
+listLen :: [a] -> Integer
+listLen = foldl' (\c _ -> 1 + c) 0
+```
+
+This function computes the length of the given list.  If you look at the
+type, you can say that it goes from `[a]` to `Integer`, the underlying
+types of the two semigroups above.  But it also goes from `(++)` to
+`(+)`, the underlying functions of the semigroups, in the following
+sense:
+
+  * For all `xs` and `ys`: `listLen (xs ++ ys) = listLen xs + listLen
+    ys`.
+
+We say that the `listLen` is a *semigroup morphism* or
+*structure-preserving map* from the semigroup `sAppend` to the semigroup
+`sAdd`.
+
+More generally let `(!) :: A -> A -> A` be a semigroup over `A` and `(#)
+:: B -> B -> B` be a semigroup over `B`, and let `f :: A -> B`.  Then
+`f` is called a *semigroup morphism* from `(!)` to `(#)` if and only if
+it satisfies the following law:
+
+  * Structure preservation: for all `x :: A` and `y :: A`:  `f (x ! y) =
+    f x # f y`.
+
+Much like the associativity law the structure preservation law is weak
+enough that we will find many semigroup morphisms, if we start actively
+looking for them.
+
+So what does this law actually mean, and why do we care?  Structure
+preservation captures a very strong notion of locality and parallelism.
+If a semigroup morphism cannot behave differently under composition, it
+means that if it is passed a composite, it will use information of the
+individual components only locally, even though it does not necessarily
+know that it has received a composite.  Category theorists sometimes
+call such a property *naturality*.  Software engineers might associate
+this with *composability*.
+
+The parallelism notion is equally interesting, because it is not just an
+algebraic notion, but quite literally operational parallelism.  If `f`
+is an expensive semigroup morphism, then instead of `f (x ! y)` you
+might actually consider computing `f x # f y` instead, because now you
+can compute `f x` and `f y` individually and in parallel.  This is
+essentially how MapReduce works.
