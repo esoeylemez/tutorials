@@ -6,9 +6,10 @@ This tutorial is not only educational material for you, but it's also a
 playing field for me to explore just how far simple algebraic structures
 like monoids can be applied in the context of software design.
 
+This work is licensed under a
+[Creative Commons Attribution-ShareAlike 4.0 International License][cc-by-sa].
+
 [![Creative Commons Attribution-ShareAlike 4.0 International License](https://i.creativecommons.org/l/by-sa/4.0/88x31.png)][cc-by-sa]
-This work is licensed under a [Creative Commons Attribution-ShareAlike
-4.0 International License][cc-by-sa].
 
 [cc-by-sa]: http://creativecommons.org/licenses/by-sa/4.0/
 
